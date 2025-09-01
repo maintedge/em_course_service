@@ -2,7 +2,7 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import { connectDB } from '../utils/db';
 import { successResponse, errorResponse, notFoundError, validationError, conflictError, unauthorizedError } from '../utils/response';
 import { ValidationUtil } from '../utils/validation';
-import { UserModel } from '../models/User';
+import { User, ActivityLog } from '../models/User';
 
 // Helper function to get user context from event
 const getUserContext = (event: APIGatewayProxyEvent) => {
@@ -27,7 +27,7 @@ const sanitizeUser = (user: any) => {
 export const getAllUsers: APIGatewayProxyHandler = async (event): Promise<APIGatewayProxyResult> => {
   try {
     await connectDB();
-    
+
     const userContext = getUserContext(event);
     if (!hasPermission(userContext, 'canManageUsers')) {
       return unauthorizedError('Insufficient permissions');
@@ -40,7 +40,7 @@ export const getAllUsers: APIGatewayProxyHandler = async (event): Promise<APIGat
 
     // Build filter
     const filter: any = {};
-    if (queryParams.role) {
+    if (queryParams.role && queryParams.role !== 'all') {
       filter.role = queryParams.role;
     }
     if (queryParams.isActive !== undefined) {
@@ -55,18 +55,15 @@ export const getAllUsers: APIGatewayProxyHandler = async (event): Promise<APIGat
         { email: { $regex: queryParams.search, $options: 'i' } }
       ];
     }
-
-    console.log('Filter applied:', filter);
     // Get users with pagination
     const [users, total] = await Promise.all([
-      UserModel.find(filter)
+      User.find(filter)
         .select('-password -refreshTokens -passwordResetToken -emailVerificationToken')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      UserModel.countDocuments(filter)
+      User.countDocuments(filter)
     ]);
-    console.log('Total users found:',users, total);
 
     return successResponse({
       users: users.map(sanitizeUser),
@@ -84,60 +81,6 @@ export const getAllUsers: APIGatewayProxyHandler = async (event): Promise<APIGat
   }
 };
 
-// export const getAllUsers: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-//   try {
-//     await connectDB();
-    
-//     const { page = '1', limit = '10', search = '', role = '', status = '' } = event.queryStringParameters || {};
-    
-//     const pageNum = parseInt(page);
-//     const limitNum = parseInt(limit);
-//     const skip = (pageNum - 1) * limitNum;
-    
-//     const filter: any = {};
-//     if (search) {
-//       filter.$or = [
-//         { name: { $regex: search, $options: 'i' } },
-//         { email: { $regex: search, $options: 'i' } }
-//       ];
-//     }
-//     if (role) filter.role = role;
-//     if (status) filter.status = status;
-
-//     console.log('Filter:', filter);
-    
-//     const users = await UserModel.find(filter)
-//       .select('-password')
-//       .skip(skip)
-//       .limit(limitNum)
-//       .sort({ createdAt: -1 });
-    
-//     const total = await UserModel.countDocuments(filter);
-//     const totalPages = Math.ceil(total / limitNum);
-    
-//     return successResponse({
-//       users: users.map(user => ({
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//         status: user.status,
-//         verified: user.verified,
-//         phone: user.phone,
-//         createdAt: user.createdAt,
-//         lastLogin: user.lastLogin
-//       })),
-//       total,
-//       page: pageNum,
-//       limit: limitNum,
-//       totalPages
-//     });
-//   } catch (error) {
-//     console.error('Error fetching users:', error);
-//     return errorResponse('Internal server error');
-//   }
-// };
-
 export const getUserById: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     await connectDB();
@@ -145,7 +88,7 @@ export const getUserById: APIGatewayProxyHandler = async (event: APIGatewayProxy
     const { userId } = event.pathParameters || {};
     if (!userId) return validationError('User ID is required');
     
-    const user = await UserModel.findById(userId).select('-password');
+    const user = await User.findById(userId);
     if (!user) return notFoundError('User not found');
     
     return successResponse({
@@ -192,10 +135,10 @@ export const createUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
       return validationError('Invalid phone number');
     }
     
-    const existingUser = await UserModel.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) return conflictError('User with this email already exists');
     
-    const user = new UserModel({ name, email, role, status, verified, phone });
+    const user = new User({ name, email, role, status, verified, phone });
     await user.save();
     
     return successResponse({
@@ -243,7 +186,7 @@ export const updateUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
     if (body.skills) updates.skills = body.skills;
     if (body.dateOfBirth) updates.dateOfBirth = new Date(body.dateOfBirth);
     
-    const user = await UserModel.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
     if (!user) return notFoundError('User not found');
     
     return successResponse({
@@ -269,7 +212,7 @@ export const deleteUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
     const { userId } = event.pathParameters || {};
     if (!userId) return validationError('User ID is required');
     
-    const user = await UserModel.findByIdAndDelete(userId);
+    const user = await User.findByIdAndDelete(userId);
     if (!user) return notFoundError('User not found');
     
     return successResponse({ message: 'User deleted successfully' });
@@ -283,13 +226,13 @@ export const getUserStats: APIGatewayProxyHandler = async (): Promise<APIGateway
   try {
     await connectDB();
     
-    const totalUsers = await UserModel.countDocuments();
-    const activeUsers = await UserModel.countDocuments({ status: 'active' });
-    const verifiedUsers = await UserModel.countDocuments({ verified: true });
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ status: 'active' });
+    const verifiedUsers = await User.countDocuments({ verified: true });
     
     const currentMonth = new Date();
     currentMonth.setDate(1);
-    const newUsersThisMonth = await UserModel.countDocuments({ createdAt: { $gte: currentMonth } });
+    const newUsersThisMonth = await User.countDocuments({ createdAt: { $gte: currentMonth } });
     
     return successResponse({
       totalUsers,
@@ -317,7 +260,7 @@ export const verifyUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
     if (verificationType === 'email') updates.emailVerified = true;
     if (verificationType === 'phone') updates.phoneVerified = true;
     
-    const user = await UserModel.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
     if (!user) return notFoundError('User not found');
     
     return successResponse({ message: 'User verified successfully', user });
@@ -337,7 +280,7 @@ export const suspendUser: APIGatewayProxyHandler = async (event: APIGatewayProxy
     const body = JSON.parse(event.body || '{}');
     const { reason, duration } = body;
     
-    const user = await UserModel.findByIdAndUpdate(userId, {
+    const user = await User.findByIdAndUpdate(userId, {
       status: 'suspended',
       suspensionReason: reason,
       suspensionDuration: duration
@@ -359,7 +302,7 @@ export const activateUser: APIGatewayProxyHandler = async (event: APIGatewayProx
     const { userId } = event.pathParameters || {};
     if (!userId) return validationError('User ID is required');
     
-    const user = await UserModel.findByIdAndUpdate(userId, {
+    const user = await User.findByIdAndUpdate(userId, {
       status: 'active',
       $unset: { suspensionReason: 1, suspensionDuration: 1 }
     }, { new: true }).select('-password');
@@ -417,7 +360,7 @@ export const bulkUpdateUsers: APIGatewayProxyHandler = async (event: APIGatewayP
       return validationError('User IDs array is required');
     }
     
-    const result = await UserModel.updateMany(
+    const result = await User.updateMany(
       { _id: { $in: userIds } },
       updates
     );
@@ -443,7 +386,7 @@ export const bulkDeleteUsers: APIGatewayProxyHandler = async (event: APIGatewayP
       return validationError('User IDs array is required');
     }
     
-    const result = await UserModel.deleteMany({ _id: { $in: userIds } });
+    const result = await User.deleteMany({ _id: { $in: userIds } });
     
     return successResponse({
       message: 'Users deleted successfully',
@@ -479,7 +422,7 @@ export const updateUserRole: APIGatewayProxyHandler = async (event: APIGatewayPr
       return validationError('Valid role is required');
     }
     
-    const user = await UserModel.findByIdAndUpdate(userId, { role }, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(userId, { role }, { new: true }).select('-password');
     if (!user) return notFoundError('User not found');
     
     return successResponse({
