@@ -1,0 +1,169 @@
+service: em-user-service
+frameworkVersion: '3.40.0'
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 30
+  environment:
+    ENV_DATA: ${env:ENV_DATA, ssm:/aws/reference/secretsmanager/prod/envs}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Resource: "*"
+          Action: 
+            - secretsmanager:GetSecretValue
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: false
+    exclude: ['aws-sdk']
+    target: 'node18'
+    define:
+      'require.resolve': undefined
+    platform: 'node'
+
+functions:
+  # Custom Authorizer
+  customAuthorizer:
+    handler: dist/auth/authorizer.handler
+
+  # User Management Endpoints
+  getAllUsers:
+    handler: dist/api/user.getAllUsers
+    events:
+      - http:
+          path: /api/users
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  getUserById:
+    handler: dist/api/user.getUserById
+    events:
+      - http:
+          path: /api/users/{userId}
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  createUser:
+    handler: dist/api/user.createUser
+    events:
+      - http:
+          path: /api/users
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  updateUser:
+    handler: dist/api/user.updateUser
+    events:
+      - http:
+          path: /api/users/{userId}
+          method: put
+          cors: true
+          authorizer: customAuthorizer
+
+  deleteUser:
+    handler: dist/api/user.deleteUser
+    events:
+      - http:
+          path: /api/users/{userId}
+          method: delete
+          cors: true
+          authorizer: customAuthorizer
+
+  # User Statistics
+  getUserStats:
+    handler: dist/api/user.getUserStats
+    events:
+      - http:
+          path: /api/users/stats
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  # User Actions
+  verifyUser:
+    handler: dist/api/user.verifyUser
+    events:
+      - http:
+          path: /api/users/{userId}/verify
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  suspendUser:
+    handler: dist/api/user.suspendUser
+    events:
+      - http:
+          path: /api/users/{userId}/suspend
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  activateUser:
+    handler: dist/api/user.activateUser
+    events:
+      - http:
+          path: /api/users/{userId}/activate
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  # User Activity
+  getUserActivity:
+    handler: dist/api/user.getUserActivity
+    events:
+      - http:
+          path: /api/users/{userId}/activity
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  # Bulk Operations
+  bulkUpdateUsers:
+    handler: dist/api/user.bulkUpdateUsers
+    events:
+      - http:
+          path: /api/users/bulk-update
+          method: put
+          cors: true
+          authorizer: customAuthorizer
+
+  bulkDeleteUsers:
+    handler: dist/api/user.bulkDeleteUsers
+    events:
+      - http:
+          path: /api/users/bulk-delete
+          method: delete
+          cors: true
+          authorizer: customAuthorizer
+
+  # User Roles
+  getUserRoles:
+    handler: dist/api/user.getUserRoles
+    events:
+      - http:
+          path: /api/users/roles
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateUserRole:
+    handler: dist/api/user.updateUserRole
+    events:
+      - http:
+          path: /api/users/{userId}/role
+          method: put
+          cors: true
+          authorizer: customAuthorizer
