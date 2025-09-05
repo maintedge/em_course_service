@@ -3,6 +3,7 @@ import { connectDB } from '../utils/db';
 import { successResponse, errorResponse, notFoundError, validationError, conflictError, unauthorizedError } from '../utils/response';
 import { ValidationUtil } from '../utils/validation';
 import { User, ActivityLog } from '../models/User';
+import { sendWelcomeMail } from '../utils/email';
 
 // Helper function to get user context from event
 const getUserContext = (event: APIGatewayProxyEvent) => {
@@ -100,6 +101,7 @@ export const getUserById: APIGatewayProxyHandler = async (event: APIGatewayProxy
       dateOfBirth: user.dateOfBirth,
       role: user.role,
       status: user.status,
+      isActive: user.isActive,
       verified: user.verified,
       emailVerified: user.emailVerified,
       phoneVerified: user.phoneVerified,
@@ -120,7 +122,7 @@ export const createUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
     await connectDB();
     
     const body = JSON.parse(event.body || '{}');
-    const { name, email, role = 'student', status = 'active', verified = false, phone } = body;
+    const { name, email, role = 'student', verified = false, phone, dateOfBirth, emailVerified, phoneVerified, requirePasswordChange, sendWelcomeEmail, isActive } = body;
     
     if (!name || !ValidationUtil.isValidName(name)) {
       return validationError('Valid name is required');
@@ -138,8 +140,16 @@ export const createUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
     const existingUser = await User.findOne({ email });
     if (existingUser) return conflictError('User with this email already exists');
     
-    const user = new User({ name, email, role, status, verified, phone });
+    const user = new User({ name, email, role, verified, isActive, phone, dateOfBirth, emailVerified, phoneVerified, requirePasswordChange });
     await user.save();
+
+    if (sendWelcomeEmail) {
+      try {
+        await sendWelcomeMail(user.email, user.name);
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+      }
+    }
     
     return successResponse({
       id: user._id,
