@@ -1,0 +1,86 @@
+name: Deploy SkillUP Auth Serverless Microservice
+
+on:
+  push:
+    branches:
+      - develop
+      - staging
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone --no-checkout "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" .
+          git fetch origin "${GITHUB_SHA}" --depth=1
+          git checkout "${{ github.ref_name }}"
+
+      - name: Set up Node.js
+        run: |
+          mkdir -p $HOME/node
+          curl -fsSL https://nodejs.org/dist/v18.17.0/node-v18.17.0-linux-x64.tar.xz | tar -xJ -C $HOME/node --strip-components=1
+          export PATH=$HOME/node/bin:$PATH
+          node --version
+          npm --version
+          echo "PATH=$HOME/node/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install Serverless Framework
+        run: npm install -g serverless@3.38.0
+
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update
+          aws --version
+
+      - name: Install dependencies
+        run: npm install
+
+      # - name: Run tests
+      #   run: npm run test # Allow tests to fail without stopping the deployment
+
+      - name: Create build
+        run: npm run build
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if [ -n "${{ github.base_ref }}" ] && git fetch origin ${{ github.base_ref }} 2>/dev/null; then
+            if [ -n "$(git diff --name-only origin/${{ github.base_ref }} HEAD)" ]; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Fallback for push events, new branches, or single commits
+            if [ -n "$(git diff --name-only HEAD^ HEAD)" ] || [ "$(git rev-list --count HEAD)" = "1" ]; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Determine stage
+        id: set-stage
+        run: |
+          if [ "${{ github.ref_name }}" = "develop" ]; then
+            echo "stage=dev" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "staging" ]; then
+            echo "stage=stg" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "master" ]; then
+            echo "stage=prod" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy Service
+        if: steps.check-changes.outputs.changed == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          serverless deploy --stage ${{ steps.set-stage.outputs.stage }} --region us-east-1
