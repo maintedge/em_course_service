@@ -41,7 +41,7 @@ functions:
     handler: dist/api/user.getAllUsers
     events:
       - http:
-          path: /api/users
+          path: /api/list
           method: get
           cors: true
           authorizer: customAuthorizer
@@ -50,7 +50,7 @@ functions:
     handler: dist/api/user.getUserById
     events:
       - http:
-          path: /api/users/{userId}
+          path: /api/{userId}
           method: get
           cors: true
           authorizer: customAuthorizer
@@ -59,7 +59,7 @@ functions:
     handler: dist/api/user.createUser
     events:
       - http:
-          path: /api/users
+          path: /api/create
           method: post
           cors: true
           authorizer: customAuthorizer
@@ -68,7 +68,7 @@ functions:
     handler: dist/api/user.updateUser
     events:
       - http:
-          path: /api/users/{userId}
+          path: /api/{userId}
           method: put
           cors: true
           authorizer: customAuthorizer
@@ -77,7 +77,7 @@ functions:
     handler: dist/api/user.deleteUser
     events:
       - http:
-          path: /api/users/{userId}
+          path: /api/{userId}
           method: delete
           cors: true
           authorizer: customAuthorizer
@@ -87,7 +87,7 @@ functions:
     handler: dist/api/user.getUserStats
     events:
       - http:
-          path: /api/users/stats
+          path: /api/stats
           method: get
           cors: true
           authorizer: customAuthorizer
@@ -97,7 +97,7 @@ functions:
     handler: dist/api/user.verifyUser
     events:
       - http:
-          path: /api/users/{userId}/verify
+          path: /api/verify/{userId}
           method: post
           cors: true
           authorizer: customAuthorizer
@@ -106,7 +106,7 @@ functions:
     handler: dist/api/user.suspendUser
     events:
       - http:
-          path: /api/users/{userId}/suspend
+          path: /api/suspend/{userId}
           method: post
           cors: true
           authorizer: customAuthorizer
@@ -115,7 +115,7 @@ functions:
     handler: dist/api/user.activateUser
     events:
       - http:
-          path: /api/users/{userId}/activate
+          path: /api/activate/{userId}
           method: post
           cors: true
           authorizer: customAuthorizer
@@ -125,7 +125,7 @@ functions:
     handler: dist/api/user.getUserActivity
     events:
       - http:
-          path: /api/users/{userId}/activity
+          path: /api/activity/{userId}
           method: get
           cors: true
           authorizer: customAuthorizer
@@ -135,7 +135,7 @@ functions:
     handler: dist/api/user.bulkUpdateUsers
     events:
       - http:
-          path: /api/users/bulk-update
+          path: /api/bulk-update
           method: put
           cors: true
           authorizer: customAuthorizer
@@ -144,7 +144,7 @@ functions:
     handler: dist/api/user.bulkDeleteUsers
     events:
       - http:
-          path: /api/users/bulk-delete
+          path: /api/bulk-delete
           method: delete
           cors: true
           authorizer: customAuthorizer
@@ -154,7 +154,7 @@ functions:
     handler: dist/api/user.getUserRoles
     events:
       - http:
-          path: /api/users/roles
+          path: /api/roles
           method: get
           cors: true
           authorizer: customAuthorizer
@@ -163,7 +163,7 @@ functions:
     handler: dist/api/user.updateUserRole
     events:
       - http:
-          path: /api/users/{userId}/role
+          path: /api/role/{userId}
           method: put
           cors: true
           authorizer: customAuthorizer
