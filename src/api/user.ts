@@ -4,6 +4,8 @@ import { successResponse, errorResponse, notFoundError, validationError, conflic
 import { ValidationUtil } from '../utils/validation';
 import { User, ActivityLog } from '../models/User';
 import { sendWelcomeMail } from '../utils/email';
+import * as bcrypt from 'bcryptjs';
+
 
 // Helper function to get user context from event
 const getUserContext = (event: APIGatewayProxyEvent) => {
@@ -94,6 +96,7 @@ export const getUserById: APIGatewayProxyHandler = async (event: APIGatewayProxy
     
     return successResponse({
       id: user._id,
+      _id: user._id,
       name: user.name,
       email: user.email,
       avatar: user.avatar,
@@ -195,7 +198,12 @@ export const updateUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
     if (body.bio) updates.bio = body.bio;
     if (body.skills) updates.skills = body.skills;
     if (body.dateOfBirth) updates.dateOfBirth = new Date(body.dateOfBirth);
-    
+    if (body.password) {
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(body.password, saltRounds);
+      updates.password = hashedPassword;
+    }
+    console.log('Updates to apply:', updates);
     const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
     if (!user) return notFoundError('User not found');
     
@@ -269,7 +277,7 @@ export const verifyUser: APIGatewayProxyHandler = async (event: APIGatewayProxyE
     const updates: any = { verified: true };
     if (verificationType === 'email') updates.emailVerified = true;
     if (verificationType === 'phone') updates.phoneVerified = true;
-    
+    if (verificationType === 'identity') updates.isVerified = true;
     const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
     if (!user) return notFoundError('User not found');
     

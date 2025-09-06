@@ -12,6 +12,8 @@ export interface IUser {
   verified: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
+  isVerified: boolean;
+  password: string;
   requirePasswordChange: boolean;
   isActive: boolean;
   bio?: string;
@@ -34,6 +36,8 @@ const userSchema = new mongoose.Schema({
   verified: { type: Boolean, default: false },
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: false },
+  password: { type: String, required: true },
   requirePasswordChange: { type: Boolean, default: false },
   isActive: { type: Boolean, default: false },
   bio: { type: String },
