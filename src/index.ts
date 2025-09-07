@@ -1,7 +1,8 @@
-// This file exports all handlers from the API modules
-
-// User handlers
-export * from './api/user';
+// Course Management API Handlers
+export * from './api/courses';
+export * from './api/batches';
+export * from './api/assignments';
+export * from './api/enrollments';
 
 // Authorizer
 export * from './auth/authorizer';

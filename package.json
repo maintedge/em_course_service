@@ -1,11 +1,11 @@
 {
-  "name": "em_user_service",
+  "name": "em_course_service",
   "version": "1.0.0",
-  "description": "SkillUp LMS Microservice - em_user_service",
+  "description": "SkillUp LMS Microservice - em_course_service",
   "main": "index.js",
   "scripts": {
     "deploy": "serverless deploy",
-    "offline": "serverless offline -s prod --httpPort 4001 --lambdaPort 3003",
+    "offline": "serverless offline -s prod --httpPort 4002 --lambdaPort 3004",
     "build": "tsc",
     "dev": "serverless offline start --stage dev",
     "test": "jest --coverage",
@@ -18,7 +18,8 @@
     "aws",
     "lambda",
     "skillup",
-    "lms"
+    "lms",
+    "course-management"
   ],
   "author": "eMentor Team",
   "license": "ISC",

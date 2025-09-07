@@ -1,4 +1,4 @@
-service: em-user-service
+service: em-course-service
 frameworkVersion: '3.40.0'
 provider:
   name: aws
@@ -36,134 +36,294 @@ functions:
   customAuthorizer:
     handler: dist/auth/authorizer.handler
 
-  # User Management Endpoints
-  getAllUsers:
-    handler: dist/api/user.getAllUsers
+  # Course Management
+  createCourse:
+    handler: dist/api/courses.createCourse
     events:
       - http:
-          path: /api/list
-          method: get
-          cors: true
-          authorizer: customAuthorizer
-
-  getUserById:
-    handler: dist/api/user.getUserById
-    events:
-      - http:
-          path: /api/{userId}
-          method: get
-          cors: true
-          authorizer: customAuthorizer
-
-  createUser:
-    handler: dist/api/user.createUser
-    events:
-      - http:
-          path: /api/create
+          path: /courses
           method: post
           cors: true
           authorizer: customAuthorizer
 
-  updateUser:
-    handler: dist/api/user.updateUser
+  getCourse:
+    handler: dist/api/courses.getCourse
     events:
       - http:
-          path: /api/{userId}
+          path: /courses/{id}
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateCourse:
+    handler: dist/api/courses.updateCourse
+    events:
+      - http:
+          path: /courses/{id}
           method: put
           cors: true
           authorizer: customAuthorizer
 
-  deleteUser:
-    handler: dist/api/user.deleteUser
+  deleteCourse:
+    handler: dist/api/courses.deleteCourse
     events:
       - http:
-          path: /api/{userId}
+          path: /courses/{id}
           method: delete
           cors: true
           authorizer: customAuthorizer
 
-  # User Statistics
-  getUserStats:
-    handler: dist/api/user.getUserStats
+  listCourses:
+    handler: dist/api/courses.listCourses
     events:
       - http:
-          path: /api/stats
+          path: /courses
           method: get
           cors: true
           authorizer: customAuthorizer
 
-  # User Actions
-  verifyUser:
-    handler: dist/api/user.verifyUser
+  publishCourse:
+    handler: dist/api/courses.publishCourse
     events:
       - http:
-          path: /api/verify/{userId}
+          path: /courses/{id}/publish
           method: post
           cors: true
           authorizer: customAuthorizer
 
-  suspendUser:
-    handler: dist/api/user.suspendUser
+  archiveCourse:
+    handler: dist/api/courses.archiveCourse
     events:
       - http:
-          path: /api/suspend/{userId}
+          path: /courses/{id}/archive
           method: post
           cors: true
           authorizer: customAuthorizer
 
-  activateUser:
-    handler: dist/api/user.activateUser
+  updateCourseStatus:
+    handler: dist/api/courses.updateCourseStatus
     events:
       - http:
-          path: /api/activate/{userId}
-          method: post
+          path: /courses/{id}/status
+          method: patch
           cors: true
           authorizer: customAuthorizer
 
-  # User Activity
-  getUserActivity:
-    handler: dist/api/user.getUserActivity
+  getCourseStatistics:
+    handler: dist/api/courses.getCourseStatistics
     events:
       - http:
-          path: /api/activity/{userId}
+          path: /courses/statistics
           method: get
           cors: true
           authorizer: customAuthorizer
 
-  # Bulk Operations
-  bulkUpdateUsers:
-    handler: dist/api/user.bulkUpdateUsers
+  # Batch Management
+  createBatch:
+    handler: dist/api/batches.createBatch
     events:
       - http:
-          path: /api/bulk-update
+          path: /batches
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  getBatch:
+    handler: dist/api/batches.getBatch
+    events:
+      - http:
+          path: /batches/{id}
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateBatch:
+    handler: dist/api/batches.updateBatch
+    events:
+      - http:
+          path: /batches/{id}
           method: put
           cors: true
           authorizer: customAuthorizer
 
-  bulkDeleteUsers:
-    handler: dist/api/user.bulkDeleteUsers
+  deleteBatch:
+    handler: dist/api/batches.deleteBatch
     events:
       - http:
-          path: /api/bulk-delete
+          path: /batches/{id}
           method: delete
           cors: true
           authorizer: customAuthorizer
 
-  # User Roles
-  getUserRoles:
-    handler: dist/api/user.getUserRoles
+  listBatches:
+    handler: dist/api/batches.listBatches
     events:
       - http:
-          path: /api/roles
+          path: /batches
           method: get
           cors: true
           authorizer: customAuthorizer
 
-  updateUserRole:
-    handler: dist/api/user.updateUserRole
+  getBatchStudents:
+    handler: dist/api/batches.getBatchStudents
     events:
       - http:
-          path: /api/role/{userId}
+          path: /batches/{id}/students
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  addStudentToBatch:
+    handler: dist/api/batches.addStudentToBatch
+    events:
+      - http:
+          path: /batches/{id}/students
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  removeStudentFromBatch:
+    handler: dist/api/batches.removeStudentFromBatch
+    events:
+      - http:
+          path: /batches/{id}/students/{studentId}
+          method: delete
+          cors: true
+          authorizer: customAuthorizer
+
+  # Assignment Management
+  createAssignment:
+    handler: dist/api/assignments.createAssignment
+    events:
+      - http:
+          path: /assignments
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  getAssignment:
+    handler: dist/api/assignments.getAssignment
+    events:
+      - http:
+          path: /assignments/{id}
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateAssignment:
+    handler: dist/api/assignments.updateAssignment
+    events:
+      - http:
+          path: /assignments/{id}
           method: put
+          cors: true
+          authorizer: customAuthorizer
+
+  deleteAssignment:
+    handler: dist/api/assignments.deleteAssignment
+    events:
+      - http:
+          path: /assignments/{id}
+          method: delete
+          cors: true
+          authorizer: customAuthorizer
+
+  listAssignments:
+    handler: dist/api/assignments.listAssignments
+    events:
+      - http:
+          path: /assignments
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  publishAssignment:
+    handler: dist/api/assignments.publishAssignment
+    events:
+      - http:
+          path: /assignments/{id}/publish
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  getAssignmentsByDueDate:
+    handler: dist/api/assignments.getAssignmentsByDueDate
+    events:
+      - http:
+          path: /assignments/due-date
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  # Enrollment Management
+  enrollStudent:
+    handler: dist/api/enrollments.enrollStudent
+    events:
+      - http:
+          path: /enrollments
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  getEnrollment:
+    handler: dist/api/enrollments.getEnrollment
+    events:
+      - http:
+          path: /enrollments/{id}
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateEnrollmentStatus:
+    handler: dist/api/enrollments.updateEnrollmentStatus
+    events:
+      - http:
+          path: /enrollments/{id}/status
+          method: put
+          cors: true
+          authorizer: customAuthorizer
+
+  listEnrollments:
+    handler: dist/api/enrollments.listEnrollments
+    events:
+      - http:
+          path: /enrollments
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateStudentProgress:
+    handler: dist/api/enrollments.updateStudentProgress
+    events:
+      - http:
+          path: /enrollments/{id}/progress
+          method: put
+          cors: true
+          authorizer: customAuthorizer
+
+  issueCertificate:
+    handler: dist/api/enrollments.issueCertificate
+    events:
+      - http:
+          path: /enrollments/{id}/certificate
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  getStudentProgress:
+    handler: dist/api/enrollments.getStudentProgress
+    events:
+      - http:
+          path: /enrollments/progress
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  dropEnrollment:
+    handler: dist/api/enrollments.dropEnrollment
+    events:
+      - http:
+          path: /enrollments/{id}/drop
+          method: post
           cors: true
           authorizer: customAuthorizer
