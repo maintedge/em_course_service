@@ -239,3 +239,48 @@ export interface UpdateCourseRequest {
   prerequisites?: string[];
   tags?: string[];
 }
+
+// Schedule Event Types
+export interface ScheduleEvent {
+  id: string;
+  title: string;
+  description?: string;
+  courseId?: string;
+  batchId?: string;
+  instructorId: string;
+  eventType: ScheduleEventType;
+  startTime: Date;
+  endTime: Date;
+  location?: string;
+  meetingUrl?: string;
+  isRecurring: boolean;
+  recurrencePattern?: string;
+  attendees: string[];
+  maxAttendees?: number;
+  isRequired: boolean;
+  materials: string[];
+  status: ScheduleEventStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum ScheduleEventType {
+  LECTURE = 'lecture',
+  LAB = 'lab',
+  WORKSHOP = 'workshop',
+  SEMINAR = 'seminar',
+  EXAM = 'exam',
+  ASSIGNMENT_DUE = 'assignment_due',
+  OFFICE_HOURS = 'office_hours',
+  MEETING = 'meeting',
+  BREAK = 'break',
+  HOLIDAY = 'holiday'
+}
+
+export enum ScheduleEventStatus {
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  POSTPONED = 'postponed'
+}

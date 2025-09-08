@@ -29,6 +29,10 @@ custom:
     target: 'node18'
     define:
       'require.resolve': undefined
+  serverless-offline:
+    httpPort: 4002
+    lambdaPort: 4003
+    stage: prod
     platform: 'node'
 
 functions:
@@ -251,6 +255,52 @@ functions:
     events:
       - http:
           path: /assignments/due-date
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  # Schedule Management
+  createScheduleEvent:
+    handler: dist/api/schedules.createScheduleEvent
+    events:
+      - http:
+          path: /schedules
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  getScheduleEvent:
+    handler: dist/api/schedules.getScheduleEvent
+    events:
+      - http:
+          path: /schedules/{id}
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateScheduleEvent:
+    handler: dist/api/schedules.updateScheduleEvent
+    events:
+      - http:
+          path: /schedules/{id}
+          method: put
+          cors: true
+          authorizer: customAuthorizer
+
+  deleteScheduleEvent:
+    handler: dist/api/schedules.deleteScheduleEvent
+    events:
+      - http:
+          path: /schedules/{id}
+          method: delete
+          cors: true
+          authorizer: customAuthorizer
+
+  listScheduleEvents:
+    handler: dist/api/schedules.listScheduleEvents
+    events:
+      - http:
+          path: /schedules
           method: get
           cors: true
           authorizer: customAuthorizer

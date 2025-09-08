@@ -119,6 +119,56 @@ export const updateCourseStatusSchema = Joi.object({
   status: Joi.string().valid(...Object.values(CourseStatus)).required()
 });
 
+// Schedule event validation schema
+export const createScheduleEventSchema = Joi.object({
+  title: Joi.string().required(),
+  description: Joi.string().optional(),
+  courseId: Joi.string().required(),
+  batchId: Joi.string().optional(),
+  eventType: Joi.string().required(),
+  startTime: Joi.string().isoDate().required(),
+  endTime: Joi.string().isoDate().required(),
+  location: Joi.string().optional(),
+  meetingUrl: Joi.string().uri().optional(),
+  isRecurring: Joi.boolean().default(false),
+  recurrencePattern: Joi.string().optional(),
+  attendees: Joi.array().items(Joi.string()).optional(),
+  maxAttendees: Joi.number().min(1).optional(),
+  isRequired: Joi.boolean().default(true),
+  materials: Joi.array().items(Joi.string()).optional()
+});
+
+// Assignment filters schema
+export const assignmentFiltersSchema = Joi.object({
+  search: Joi.string().allow('').optional(),
+  courseId: Joi.string().optional(),
+  batchId: Joi.string().optional(),
+  type: Joi.string().optional(),
+  status: Joi.string().optional(),
+  difficulty: Joi.string().optional(),
+  sortBy: Joi.string().valid('title', 'dueDate', 'createdAt', 'difficulty', 'maxScore').default('createdAt'),
+  sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(20)
+});
+
+// Schedule filters schema
+export const scheduleFiltersSchema = Joi.object({
+  search: Joi.string().allow('').optional(),
+  courseId: Joi.string().optional(),
+  batchId: Joi.string().optional(),
+  instructorId: Joi.string().optional(),
+  type: Joi.string().optional(),
+  status: Joi.string().optional(),
+  startDate: Joi.string().isoDate().optional(),
+  endDate: Joi.string().isoDate().optional(),
+  dateRange: Joi.string().optional(),
+  sortBy: Joi.string().valid('title', 'startTime', 'createdAt', 'eventType').default('startTime'),
+  sortOrder: Joi.string().valid('asc', 'desc').default('asc'),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(20)
+});
+
 export const validateRequest = (data: any, schema: any) => {
   const { error, value } = schema.validate(data, { abortEarly: false });
   if (error) {

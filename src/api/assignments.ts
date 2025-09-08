@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { connectDB } from '../utils/db';
 import { AssignmentService } from '../services/assignmentService';
 import { successResponse, errorResponse, handleError } from '../utils/response';
-import { validateRequest, createAssignmentSchema, paginationSchema } from '../utils/validation';
+import { validateRequest, createAssignmentSchema, paginationSchema, assignmentFiltersSchema } from '../utils/validation';
 
 const assignmentService = new AssignmentService();
 
@@ -101,20 +101,23 @@ export const listAssignments = async (event: APIGatewayProxyEvent): Promise<APIG
     await connectDB();
 
     const queryParams = event.queryStringParameters || {};
-    const validatedFilters = validateRequest(queryParams, paginationSchema);
-
-    // Add additional filters
+    
+    // Convert string parameters to proper types
     const filters = {
-      ...validatedFilters,
+      search: queryParams.search || '',
       courseId: queryParams.courseId,
       batchId: queryParams.batchId,
-      instructorId: queryParams.instructorId,
-      type: queryParams.type,
-      status: queryParams.status,
-      search: queryParams.search
+      type: queryParams.type === 'all' ? undefined : queryParams.type,
+      status: queryParams.status === 'all' ? undefined : queryParams.status,
+      difficulty: queryParams.difficulty === 'all' ? undefined : queryParams.difficulty,
+      sortBy: queryParams.sortBy || 'createdAt',
+      sortOrder: queryParams.sortOrder === 'desc' ? 'desc' : 'asc',
+      page: parseInt(queryParams.page || '1'),
+      limit: parseInt(queryParams.limit || '20')
     };
 
-    const result = await assignmentService.listAssignments(filters);
+    const validatedFilters = validateRequest(filters, assignmentFiltersSchema);
+    const result = await assignmentService.listAssignments(validatedFilters);
     
     return successResponse({
       assignments: result.assignments,
