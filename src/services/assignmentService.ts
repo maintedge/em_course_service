@@ -68,7 +68,10 @@ export class AssignmentService {
     instructorId?: string; 
     type?: string; 
     status?: string;
+    difficulty?: string;
     search?: string;
+    sortBy?: string;
+    sortOrder?: string;
   }): Promise<{ assignments: Assignment[]; total: number; pages: number }> {
     const query: any = {};
 
@@ -92,6 +95,10 @@ export class AssignmentService {
       query.status = filters.status;
     }
 
+    if (filters.difficulty && filters.difficulty !== 'all') {
+      query.difficulty = filters.difficulty;
+    }
+
     if (filters.search) {
       query.$or = [
         { title: { $regex: filters.search, $options: 'i' } },
@@ -99,9 +106,14 @@ export class AssignmentService {
       ];
     }
 
+    const sortBy = filters.sortBy || 'createdAt';
+    const sortOrder = filters.sortOrder === 'desc' ? -1 : 1;
+    const sortObj: any = {};
+    sortObj[sortBy] = sortOrder;
+
     const skip = (filters.page - 1) * filters.limit;
     const [assignments, total] = await Promise.all([
-      AssignmentModel.find(query).sort({ dueDate: -1 }).skip(skip).limit(filters.limit),
+      AssignmentModel.find(query).sort(sortObj).skip(skip).limit(filters.limit),
       AssignmentModel.countDocuments(query)
     ]);
 
