@@ -196,3 +196,47 @@ export class EnrollmentService {
     return true;
   }
 }
+// Get student enrollments - simplified version
+export const getStudentEnrollments = async (userId: string) => {
+  try {
+    // Mock data for now - replace with actual database queries
+    const mockEnrollments = [
+      {
+        id: 'enroll_1',
+        studentId: userId,
+        courseId: 'course_1',
+        batchId: 'batch_1',
+        courseName: 'JavaScript Fundamentals',
+        batchName: 'JS-2024-01',
+        enrollmentDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'active',
+        progress: 65,
+        completedAssignments: 3,
+        totalAssignments: 8,
+        lastAccessedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'enroll_2',
+        studentId: userId,
+        courseId: 'course_2',
+        batchId: 'batch_2',
+        courseName: 'React Development',
+        batchName: 'React-2024-01',
+        enrollmentDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'active',
+        progress: 25,
+        completedAssignments: 1,
+        totalAssignments: 6,
+        lastAccessedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    return {
+      enrollments: mockEnrollments,
+      total: mockEnrollments.length
+    };
+  } catch (error) {
+    console.error('Error fetching student enrollments:', error);
+    throw error;
+  }
+};

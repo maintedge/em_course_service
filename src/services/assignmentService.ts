@@ -139,3 +139,44 @@ export class AssignmentService {
     return assignments.map(assignment => assignment.toJSON() as any);
   }
 }
+// Get student assignments - simplified version
+export const getStudentAssignments = async (userId: string, filters: any) => {
+  try {
+    // Mock data for now - replace with actual database queries
+    const mockAssignments = [
+      {
+        id: 'assign_1',
+        title: 'JavaScript Fundamentals Quiz',
+        description: 'Complete the JavaScript basics quiz',
+        instructions: 'Answer all questions within 30 minutes',
+        courseId: 'course_1',
+        courseName: 'JavaScript Basics',
+        batchId: 'batch_1',
+        batchName: 'JS-2024-01',
+        type: 'quiz',
+        difficulty: 'beginner',
+        estimatedHours: 1,
+        maxScore: 100,
+        passingScore: 70,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        allowLateSubmission: true,
+        latePenalty: 10,
+        maxAttempts: 3,
+        isGroupAssignment: false,
+        maxGroupSize: 1,
+        status: 'published',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+
+    return {
+      assignments: mockAssignments,
+      total: mockAssignments.length,
+      pages: 1
+    };
+  } catch (error) {
+    console.error('Error fetching student assignments:', error);
+    throw error;
+  }
+};
