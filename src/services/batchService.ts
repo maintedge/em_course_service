@@ -71,7 +71,7 @@ export class BatchService {
     return result.deletedCount > 0;
   }
 
-  async listBatches(filters: PaginationParams & { courseId?: string; instructorId?: string; status?: string }): Promise<{ batches: Batch[]; total: number; pages: number }> {
+  async listBatches(filters: PaginationParams & { courseId?: string; instructorId?: string; status?: string; sortBy?: string; sortOrder?: string; search?: string }): Promise<{ batches: Batch[]; total: number; pages: number }> {
     const query: any = {};
 
     if (filters.courseId) {
@@ -86,9 +86,24 @@ export class BatchService {
       query.status = filters.status;
     }
 
+    // Add search functionality
+    if (filters.search && filters.search.trim()) {
+      query.$or = [
+        { name: { $regex: filters.search, $options: 'i' } },
+        { description: { $regex: filters.search, $options: 'i' } },
+        { courseName: { $regex: filters.search, $options: 'i' } }
+      ];
+    }
+
+    // Build sort object with fallback
+    const sortField = filters.sortBy || 'createdAt';
+    const sortDirection = filters.sortOrder === 'asc' ? 1 : -1;
+    const sortObj: any = { [sortField]: sortDirection, _id: 1 };
+
     const skip = (filters.page - 1) * filters.limit;
+    
     const [batches, total] = await Promise.all([
-      BatchModel.find(query).sort({ startDate: -1 }).skip(skip).limit(filters.limit),
+      BatchModel.find(query).sort(sortObj).skip(skip).limit(filters.limit),
       BatchModel.countDocuments(query)
     ]);
 

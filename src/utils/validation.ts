@@ -109,7 +109,7 @@ export const batchFiltersSchema = paginationSchema.keys({
   autoEnroll: Joi.boolean().optional(),
   search: Joi.string().allow('').optional(),
   status: Joi.string().optional(),
-  sortBy: Joi.string().valid('name', 'startDate', 'endDate', 'maxStudents', 'createdAt').default('createdAt'),
+  sortBy: Joi.string().valid('name', 'startDate', 'endDate', 'maxStudents', 'enrolledStudents', 'createdAt').default('createdAt'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
   // Add other batch-specific filters as needed
 });
