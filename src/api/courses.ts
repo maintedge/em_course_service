@@ -202,6 +202,117 @@ export const updateCourseStatus = async (event: APIGatewayProxyEvent): Promise<A
   }
 };
 
+// Course Curriculum endpoints
+export const getCourseCurriculum = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectDB();
+
+    const courseId = event.pathParameters?.id;
+    if (!courseId) {
+      return errorResponse('Course ID is required', 400);
+    }
+
+    // Get curriculum from database
+    const Curriculum = require('../models/Curriculum').default;
+    const curriculum = await Curriculum.findOne({ courseId }).lean();
+
+    if (!curriculum) {
+      // Return empty curriculum structure if none exists
+      const courseService = require('../services/courseService').CourseService;
+      const service = new courseService();
+      
+      let course;
+      try {
+        course = await service.getCourseById(courseId);
+      } catch (err) {
+        return errorResponse('Course not found', 404);
+      }
+
+      const emptyCurriculum = {
+        courseId,
+        courseName: course?.title || 'Course',
+        modules: [],
+        totalModules: 0,
+        totalLessons: 0,
+        estimatedDuration: '0 weeks'
+      };
+
+      return successResponse({ curriculum: emptyCurriculum });
+    }
+
+    return successResponse({ curriculum });
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const createCourseCurriculum = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectDB();
+
+    const courseId = event.pathParameters?.id;
+    if (!courseId) {
+      return errorResponse('Course ID is required', 400);
+    }
+
+    const instructorId = event.requestContext.authorizer?.principalId;
+    if (!instructorId) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    // Verify course exists and instructor has access
+    const courseService = require('../services/courseService').CourseService;
+    const service = new courseService();
+    
+    let course;
+    try {
+      course = await service.getCourseById(courseId);
+    } catch (err) {
+      return errorResponse('Course not found', 404);
+    }
+
+    if (!course) {
+      return errorResponse('Course not found', 404);
+    }
+
+    if (course.instructorId !== instructorId) {
+      return errorResponse('Access denied', 403);
+    }
+
+    const body = JSON.parse(event.body || '{}');
+    const modules = body.modules || [];
+    
+    // Calculate totals
+    const totalModules = modules.length;
+    const totalLessons = modules.reduce((acc: number, mod: any) => acc + (mod.lessons || []).length, 0);
+
+    // Save to database
+    const Curriculum = require('../models/Curriculum').default;
+    
+    const curriculumData = {
+      courseId,
+      courseName: course.title,
+      modules,
+      totalModules,
+      totalLessons,
+      estimatedDuration: `${Math.max(1, Math.ceil(totalLessons / 2))} weeks`,
+      createdBy: instructorId,
+      updatedAt: new Date()
+    };
+
+    // Update or create curriculum
+    const curriculum = await Curriculum.findOneAndUpdate(
+      { courseId },
+      curriculumData,
+      { upsert: true, new: true, lean: true }
+    );
+
+    return successResponse({ curriculum }, 201);
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
 export const getCourseStatistics = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     await connectDB();

@@ -113,6 +113,25 @@ functions:
           cors: true
           authorizer: customAuthorizer
 
+  # Course Curriculum Management
+  getCourseCurriculumManagement:
+    handler: dist/api/courses.getCourseCurriculum
+    events:
+      - http:
+          path: /courses/{id}/curriculum
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  createCourseCurriculumManagement:
+    handler: dist/api/courses.createCourseCurriculum
+    events:
+      - http:
+          path: /courses/{id}/curriculum
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
   getCourseStatistics:
     handler: dist/api/courses.getCourseStatistics
     events:
@@ -374,6 +393,80 @@ functions:
     events:
       - http:
           path: /enrollments/{id}/drop
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  getStudentBatchDetails:
+    handler: dist/api/enrollments.getStudentBatchDetails
+    events:
+      - http:
+          path: /enrollments/student/{studentId}/batches
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  getStudentEnrollments:
+    handler: dist/api/student.getStudentEnrollments
+    events:
+      - http:
+          path: /student/enrollments
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  getStudentAssignments:
+    handler: dist/api/student.getStudentAssignmentsAPI
+    events:
+      - http:
+          path: /student/assignments
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  getStudentSchedules:
+    handler: dist/api/student.getStudentSchedulesAPI
+    events:
+      - http:
+          path: /student/schedules
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  # Curriculum APIs
+  getStudentCurriculum:
+    handler: dist/api/curriculum.getStudentCurriculum
+    events:
+      - http:
+          path: /student/curriculum
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  getCurriculumProgress:
+    handler: dist/api/curriculum.getCurriculumProgress
+    events:
+      - http:
+          path: /student/curriculum/progress
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  # Course Management Curriculum APIs
+  getCourseCurriculum:
+    handler: dist/api/curriculum.getCourseCurriculum
+    events:
+      - http:
+          path: /curriculum/course/{courseId}
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  createCourseCurriculum:
+    handler: dist/api/curriculum.createCourseCurriculum
+    events:
+      - http:
+          path: /curriculum/course/{courseId}
           method: post
           cors: true
           authorizer: customAuthorizer

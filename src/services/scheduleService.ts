@@ -149,71 +149,37 @@ export class ScheduleService {
     return event ? event.toJSON() as any : null;
   }
 }
-// Get student schedules - simplified version
-export const getStudentSchedules = async (userId: string, filters: any) => {
+
+export const getStudentSchedules = async (studentId: string, filters: {
+  startDate?: string;
+  endDate?: string;
+  courseId?: string;
+}) => {
   try {
-    // Mock data for now - replace with actual database queries
     const mockEvents = [
       {
-        id: 'event_1',
-        title: 'JavaScript Basics - Lecture 1',
-        description: 'Introduction to JavaScript fundamentals',
-        courseId: 'course_1',
+        id: 'schedule_1',
+        title: 'JavaScript Fundamentals - Lecture 1',
+        description: 'Introduction to JavaScript variables and functions',
+        courseId: filters.courseId || 'course_1',
         courseName: 'JavaScript Fundamentals',
         batchId: 'batch_1',
+        startTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+        endTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
         eventType: 'lecture',
-        startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-        endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
-        location: 'Room 101',
-        meetingUrl: 'https://meet.example.com/js-lecture-1',
-        isRequired: true,
-        status: 'scheduled',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: 'event_2',
-        title: 'React Components Workshop',
-        description: 'Hands-on workshop on React components',
-        courseId: 'course_2',
-        courseName: 'React Development',
-        batchId: 'batch_2',
-        eventType: 'workshop',
-        startTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString(),
-        location: 'Lab 202',
-        meetingUrl: 'https://meet.example.com/react-workshop',
-        isRequired: true,
-        status: 'scheduled',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        location: 'Online',
+        meetingUrl: 'https://meet.google.com/abc-def-ghi',
+        instructorName: 'John Smith',
+        status: 'scheduled'
       }
     ];
 
-    // Filter by date range if provided
-    let filteredEvents = mockEvents;
-    if (filters.startDate) {
-      filteredEvents = filteredEvents.filter(event => 
-        new Date(event.startTime) >= new Date(filters.startDate)
-      );
-    }
-    if (filters.endDate) {
-      filteredEvents = filteredEvents.filter(event => 
-        new Date(event.endTime) <= new Date(filters.endDate)
-      );
-    }
-    if (filters.courseId) {
-      filteredEvents = filteredEvents.filter(event => 
-        event.courseId === filters.courseId
-      );
-    }
-
     return {
-      events: filteredEvents,
-      total: filteredEvents.length
+      events: mockEvents,
+      total: mockEvents.length
     };
   } catch (error) {
     console.error('Error fetching student schedules:', error);
     throw error;
   }
-};
+};;

@@ -19,6 +19,7 @@ export interface CreateAssignmentRequest {
   latePenalty?: number;
   maxAttempts?: number;
   isGroupAssignment?: boolean;
+  status?: string;
 }
 
 export class AssignmentService {
@@ -151,44 +152,79 @@ export class AssignmentService {
     return assignments.map(assignment => assignment.toJSON() as any);
   }
 }
-// Get student assignments - simplified version
-export const getStudentAssignments = async (userId: string, filters: any) => {
+
+export const getStudentAssignments = async (studentId: string, filters: {
+  courseId?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}) => {
   try {
-    // Mock data for now - replace with actual database queries
-    const mockAssignments = [
-      {
-        id: 'assign_1',
-        title: 'JavaScript Fundamentals Quiz',
-        description: 'Complete the JavaScript basics quiz',
-        instructions: 'Answer all questions within 30 minutes',
-        courseId: 'course_1',
-        courseName: 'JavaScript Basics',
-        batchId: 'batch_1',
-        batchName: 'JS-2024-01',
-        type: 'quiz',
-        difficulty: 'beginner',
-        estimatedHours: 1,
-        maxScore: 100,
-        passingScore: 70,
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        allowLateSubmission: true,
-        latePenalty: 10,
-        maxAttempts: 3,
-        isGroupAssignment: false,
-        maxGroupSize: 1,
-        status: 'published',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+    // First, get student's enrolled courses
+    const EnrollmentService = require('./enrollmentService').EnrollmentService;
+    const enrollmentService = new EnrollmentService();
+    
+    let enrolledCourseIds: string[] = [];
+    try {
+      const enrollments = await enrollmentService.getStudentBatchDetails(studentId);
+      enrolledCourseIds = enrollments.map((e: any) => e.courseId);
+    } catch (err) {
+      console.log('Could not fetch enrollments, using filter courseId if provided');
+      if (filters.courseId) {
+        enrolledCourseIds = [filters.courseId];
       }
-    ];
+    }
+
+    if (enrolledCourseIds.length === 0 && !filters.courseId) {
+      return {
+        assignments: [],
+        total: 0,
+        pages: 0
+      };
+    }
+
+    // Build query for assignments
+    const query: any = {};
+    
+    // Filter by enrolled courses or specific courseId
+    if (filters.courseId) {
+      query.courseId = filters.courseId;
+    } else {
+      query.courseId = { $in: enrolledCourseIds };
+    }
+
+    // Filter by status - students should only see published assignments
+    query.status = 'published';
+
+    // Pagination
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const skip = (page - 1) * limit;
+
+    // Fetch assignments from database
+    const assignments = await AssignmentModel.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await AssignmentModel.countDocuments(query);
+
+    // Add course names and submission status
+    const enrichedAssignments = assignments.map((assignment: any) => ({
+      ...assignment,
+      submissionStatus: 'pending', // TODO: Get actual submission status
+      submittedAt: null,
+      score: null
+    }));
 
     return {
-      assignments: mockAssignments,
-      total: mockAssignments.length,
-      pages: 1
+      assignments: enrichedAssignments,
+      total,
+      pages: Math.ceil(total / limit)
     };
   } catch (error) {
     console.error('Error fetching student assignments:', error);
     throw error;
   }
-};
+};;

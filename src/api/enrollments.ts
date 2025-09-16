@@ -192,3 +192,19 @@ export const dropEnrollment = async (event: APIGatewayProxyEvent): Promise<APIGa
     return handleError(error);
   }
 };
+
+export const getStudentBatchDetails = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectDB();
+
+    const studentId = event.pathParameters?.studentId;
+    if (!studentId) {
+      return errorResponse('Student ID is required', 400);
+    }
+
+    const batchDetails = await enrollmentService.getStudentBatchDetails(studentId);
+    return successResponse({ batches: batchDetails });
+  } catch (error) {
+    return handleError(error);
+  }
+};

@@ -1,4 +1,4 @@
-import { CurriculumModel } from '../models/Curriculum';
+import Curriculum, { ICurriculum } from '../models/Curriculum';
 import { LiveClassRecordingModel } from '../models/LiveClassRecording';
 
 export interface CreateModuleRequest {
@@ -29,9 +29,9 @@ export interface CreateLessonRequest {
 export class CurriculumService {
   async createCurriculum(courseId: string, modules: CreateModuleRequest[]) {
     // Delete existing curriculum if any
-    await CurriculumModel.deleteOne({ courseId });
+    await Curriculum.deleteOne({ courseId });
     
-    const curriculum = new CurriculumModel({
+    const curriculum = new Curriculum({
       courseId,
       modules
     });
@@ -41,12 +41,12 @@ export class CurriculumService {
   }
 
   async getCurriculum(courseId: string) {
-    const curriculum = await CurriculumModel.findOne({ courseId });
+    const curriculum = await Curriculum.findOne({ courseId });
     return curriculum ? curriculum.toJSON() : null;
   }
 
   async updateModule(courseId: string, moduleId: string, updateData: Partial<CreateModuleRequest>) {
-    const curriculum = await CurriculumModel.findOne({ courseId });
+    const curriculum = await Curriculum.findOne({ courseId });
     if (!curriculum) throw new Error('Curriculum not found');
 
     const moduleIndex = curriculum.modules.findIndex((m: any) => m._id.toString() === moduleId);
@@ -58,7 +58,7 @@ export class CurriculumService {
   }
 
   async addLesson(courseId: string, moduleId: string, lessonData: CreateLessonRequest) {
-    const curriculum = await CurriculumModel.findOne({ courseId });
+    const curriculum = await Curriculum.findOne({ courseId });
     if (!curriculum) throw new Error('Curriculum not found');
 
     const module = curriculum.modules.find((m: any) => m._id.toString() === moduleId);
@@ -70,7 +70,7 @@ export class CurriculumService {
   }
 
   async updateLesson(courseId: string, moduleId: string, lessonId: string, updateData: Partial<CreateLessonRequest>) {
-    const curriculum = await CurriculumModel.findOne({ courseId });
+    const curriculum = await Curriculum.findOne({ courseId });
     if (!curriculum) throw new Error('Curriculum not found');
 
     const module = curriculum.modules.find((m: any) => m._id.toString() === moduleId);
@@ -85,7 +85,7 @@ export class CurriculumService {
   }
 
   async deleteModule(courseId: string, moduleId: string) {
-    const curriculum = await CurriculumModel.findOne({ courseId });
+    const curriculum = await Curriculum.findOne({ courseId });
     if (!curriculum) throw new Error('Curriculum not found');
 
     curriculum.modules = curriculum.modules.filter((m: any) => m._id.toString() !== moduleId) as any;
@@ -94,7 +94,7 @@ export class CurriculumService {
   }
 
   async deleteLesson(courseId: string, moduleId: string, lessonId: string) {
-    const curriculum = await CurriculumModel.findOne({ courseId });
+    const curriculum = await Curriculum.findOne({ courseId });
     if (!curriculum) throw new Error('Curriculum not found');
 
     const module = curriculum.modules.find((m: any) => m._id.toString() === moduleId);
@@ -107,7 +107,7 @@ export class CurriculumService {
 
   // Get curriculum for students with access control
   async getStudentCurriculum(courseId: string, studentId: string, batchId: string) {
-    const curriculum = await CurriculumModel.findOne({ courseId });
+    const curriculum = await Curriculum.findOne({ courseId });
     if (!curriculum) return null;
 
     // Get live class recordings the student can access

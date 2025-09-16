@@ -195,48 +195,39 @@ export class EnrollmentService {
 
     return true;
   }
-}
-// Get student enrollments - simplified version
-export const getStudentEnrollments = async (userId: string) => {
-  try {
-    // Mock data for now - replace with actual database queries
-    const mockEnrollments = [
-      {
-        id: 'enroll_1',
-        studentId: userId,
-        courseId: 'course_1',
-        batchId: 'batch_1',
-        courseName: 'JavaScript Fundamentals',
-        batchName: 'JS-2024-01',
-        enrollmentDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'active',
-        progress: 65,
-        completedAssignments: 3,
-        totalAssignments: 8,
-        lastAccessedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'enroll_2',
-        studentId: userId,
-        courseId: 'course_2',
-        batchId: 'batch_2',
-        courseName: 'React Development',
-        batchName: 'React-2024-01',
-        enrollmentDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'active',
-        progress: 25,
-        completedAssignments: 1,
-        totalAssignments: 6,
-        lastAccessedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ];
 
-    return {
-      enrollments: mockEnrollments,
-      total: mockEnrollments.length
-    };
-  } catch (error) {
-    console.error('Error fetching student enrollments:', error);
-    throw error;
+  async getStudentBatchDetails(studentId: string): Promise<any[]> {
+    const enrollments = await EnrollmentModel.find({ 
+      studentId,
+      status: { $ne: EnrollmentStatus.DROPPED }
+    });
+
+    const batchDetails = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const [course, batch] = await Promise.all([
+          CourseModel.findOne({ _id: enrollment.courseId }),
+          enrollment.batchId ? BatchModel.findOne({ _id: enrollment.batchId }) : null
+        ]);
+
+        return {
+          enrollmentId: enrollment._id,
+          courseId: enrollment.courseId,
+          courseName: course?.title || 'Unknown Course',
+          batchId: enrollment.batchId,
+          batchName: batch?.name || 'No Batch Assigned',
+          progress: enrollment.progress,
+          status: enrollment.status,
+          startDate: batch?.startDate,
+          endDate: batch?.endDate,
+          instructorName: batch?.instructorName,
+          enrolledAt: enrollment.enrolledAt,
+          lastAccessedAt: enrollment.lastAccessedAt,
+          completedLessons: enrollment.completedLessons?.length || 0,
+          certificateIssued: enrollment.certificateIssued
+        };
+      })
+    );
+
+    return batchDetails;
   }
-};
+}
