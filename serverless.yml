@@ -314,49 +314,30 @@ functions:
           cors: true
           authorizer: customAuthorizer
 
-  # Schedule Management
-  createScheduleEvent:
-    handler: dist/api/schedules.createScheduleEvent
+  getBatchSchedule:
+    handler: dist/api/schedules.getBatchSchedule
     events:
       - http:
-          path: /schedules
-          method: post
-          cors: true
-          authorizer: customAuthorizer
-
-  getScheduleEvent:
-    handler: dist/api/schedules.getScheduleEvent
-    events:
-      - http:
-          path: /schedules/{id}
+          path: /batches/{id}/schedule
           method: get
           cors: true
           authorizer: customAuthorizer
 
-  updateScheduleEvent:
-    handler: dist/api/schedules.updateScheduleEvent
+  getAllSchedules:
+    handler: dist/api/schedules.getAllSchedules
     events:
       - http:
-          path: /schedules/{id}
+          path: /admin/schedules
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  updateScheduleTutor:
+    handler: dist/api/schedules.updateScheduleTutor
+    events:
+      - http:
+          path: /admin/schedules/{id}/tutor
           method: put
-          cors: true
-          authorizer: customAuthorizer
-
-  deleteScheduleEvent:
-    handler: dist/api/schedules.deleteScheduleEvent
-    events:
-      - http:
-          path: /schedules/{id}
-          method: delete
-          cors: true
-          authorizer: customAuthorizer
-
-  listScheduleEvents:
-    handler: dist/api/schedules.listScheduleEvents
-    events:
-      - http:
-          path: /schedules
-          method: get
           cors: true
           authorizer: customAuthorizer
 

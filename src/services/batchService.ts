@@ -2,6 +2,7 @@ import { BatchModel } from '../models/Batch';
 import { CourseModel } from '../models/Course';
 import { EnrollmentModel } from '../models/Enrollment';
 import { TutorAssignmentModel } from '../models/TutorAssignment';
+import { ScheduleService } from './scheduleService';
 import { Batch, PaginationParams } from '../types/course';
 
 export interface CreateBatchRequest {
@@ -26,6 +27,7 @@ export interface CreateBatchRequest {
 }
 
 export class BatchService {
+  private scheduleService = new ScheduleService();
   async createBatch(batchData: CreateBatchRequest): Promise<Batch> {
     // Verify course exists and instructor owns it
     const course = await CourseModel.findOne({ _id: batchData.courseId });
@@ -44,6 +46,18 @@ export class BatchService {
     });
 
     const savedBatch = await batch.save();
+    
+    // Generate schedule if schedule data is provided
+    if (batchData.schedule && batchData.schedule.length > 0) {
+      await this.scheduleService.generateScheduleForBatch(
+        savedBatch._id.toString(),
+        batchData.courseId,
+        new Date(batchData.startDate),
+        new Date(batchData.endDate),
+        batchData.schedule
+      );
+    }
+
     return savedBatch.toJSON() as any;
   }
 
@@ -58,6 +72,23 @@ export class BatchService {
       { ...updateData, updatedAt: new Date() },
       { new: true }
     );
+    
+    if (batch) {
+      // Regenerate schedule if dates or schedule changed
+      if (updateData.startDate || updateData.endDate || updateData.schedule) {
+        const currentBatch = batch.toJSON() as any;
+        if (currentBatch.schedule && currentBatch.schedule.length > 0) {
+          await this.scheduleService.generateScheduleForBatch(
+            batchId,
+            currentBatch.courseId,
+            new Date(currentBatch.startDate),
+            new Date(currentBatch.endDate),
+            currentBatch.schedule
+          );
+        }
+      }
+    }
+    
     return batch ? batch.toJSON() as any : null;
   }
 
@@ -67,6 +98,9 @@ export class BatchService {
     if (enrollmentCount > 0) {
       throw new Error('Cannot delete batch with active enrollments');
     }
+
+    // Delete associated schedules
+    await this.scheduleService.deleteScheduleForBatch(batchId);
 
     const result = await BatchModel.deleteOne({ _id: batchId });
     return result.deletedCount > 0;
@@ -221,6 +255,19 @@ export class BatchService {
     });
 
     await assignment.save();
+
+    // Check if this is the first tutor assignment for this batch
+    const tutorCount = await TutorAssignmentModel.countDocuments({ batchId });
+    const isInitialAssignment = tutorCount === 1;
+
+    // Update schedule with tutor information
+    await this.scheduleService.updateScheduleTutorForBatch(
+      batchId,
+      tutorData.tutorId,
+      tutorData.tutorName,
+      isInitialAssignment
+    );
+
     return assignment.toJSON();
   }
 
@@ -231,6 +278,12 @@ export class BatchService {
     }
 
     const result = await TutorAssignmentModel.deleteOne({ batchId, tutorId });
+    
+    if (result.deletedCount > 0) {
+      // Remove tutor from future schedule entries
+      await this.scheduleService.removeTutorFromSchedule(batchId);
+    }
+    
     return result.deletedCount > 0;
   }
 }
