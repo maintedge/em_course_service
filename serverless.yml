@@ -278,6 +278,42 @@ functions:
           cors: true
           authorizer: customAuthorizer
 
+  getTutors:
+    handler: dist/api/batches.getTutors
+    events:
+      - http:
+          path: /tutors
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  getBatchTutors:
+    handler: dist/api/batches.getBatchTutors
+    events:
+      - http:
+          path: /batches/{id}/tutors
+          method: get
+          cors: true
+          authorizer: customAuthorizer
+
+  addTutorToBatch:
+    handler: dist/api/batches.addTutorToBatch
+    events:
+      - http:
+          path: /batches/{id}/tutors
+          method: post
+          cors: true
+          authorizer: customAuthorizer
+
+  removeTutorFromBatch:
+    handler: dist/api/batches.removeTutorFromBatch
+    events:
+      - http:
+          path: /batches/{id}/tutors/{tutorId}
+          method: delete
+          cors: true
+          authorizer: customAuthorizer
+
   # Schedule Management
   createScheduleEvent:
     handler: dist/api/schedules.createScheduleEvent

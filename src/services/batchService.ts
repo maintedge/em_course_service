@@ -1,6 +1,7 @@
 import { BatchModel } from '../models/Batch';
 import { CourseModel } from '../models/Course';
 import { EnrollmentModel } from '../models/Enrollment';
+import { TutorAssignmentModel } from '../models/TutorAssignment';
 import { Batch, PaginationParams } from '../types/course';
 
 export interface CreateBatchRequest {
@@ -186,5 +187,50 @@ export class BatchService {
     }
 
     return false;
+  }
+
+  async getBatchTutors(batchId: string, instructorId: string): Promise<any[]> {
+    const batch = await BatchModel.findOne({ _id: batchId });
+    if (!batch) {
+      throw new Error('Batch not found or access denied');
+    }
+
+    const tutorAssignments = await TutorAssignmentModel.find({ batchId }).sort({ assignedAt: -1 });
+    return tutorAssignments.map(assignment => assignment.toJSON());
+  }
+
+  async addTutorToBatch(batchId: string, tutorData: { tutorId: string; tutorName: string; tutorEmail: string }, instructorId: string): Promise<any> {
+    const batch = await BatchModel.findOne({ _id: batchId });
+    if (!batch) {
+      throw new Error('Batch not found or access denied');
+    }
+
+    const existingAssignment = await TutorAssignmentModel.findOne({
+      tutorId: tutorData.tutorId,
+      batchId: batchId
+    });
+
+    if (existingAssignment) {
+      throw new Error('Tutor already assigned to this batch');
+    }
+
+    const assignment = new TutorAssignmentModel({
+      ...tutorData,
+      batchId: batchId,
+      courseId: batch.courseId
+    });
+
+    await assignment.save();
+    return assignment.toJSON();
+  }
+
+  async removeTutorFromBatch(batchId: string, tutorId: string, instructorId: string): Promise<boolean> {
+    const batch = await BatchModel.findOne({ _id: batchId });
+    if (!batch) {
+      throw new Error('Batch not found or access denied');
+    }
+
+    const result = await TutorAssignmentModel.deleteOne({ batchId, tutorId });
+    return result.deletedCount > 0;
   }
 }
